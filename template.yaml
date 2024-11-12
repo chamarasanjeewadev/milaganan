@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: '2010-09-01'
+Transform: AWS::Serverless-2016-10-31
+Description: SAM template for NestJS Markdown API
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+    Description: Environment name
+
+Globals:
+  Function:
+    Timeout: 29
+    MemorySize: 1024
+    Runtime: nodejs18.x
+    Environment:
+      Variables:
+        NODE_ENV: !Ref Environment
+
+Resources:
+  MarkdownApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: apps/api/dist/main.handler
+      CodeUri: .
+      Events:
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+      Policies:
+        - AWSLambdaBasicExecutionRole
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}" 
