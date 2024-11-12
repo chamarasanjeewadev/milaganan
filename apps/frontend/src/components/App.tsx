@@ -4,6 +4,7 @@ import { Editor } from "./Editor";
 import { Preview } from "./Preview";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { Helmet } from "react-helmet";
 
 const initialMarkdown = `# Welcome to Markdown Editor
 
@@ -38,6 +39,7 @@ console.log(greeting);
 interface MarkdownResponse {
   content: string;
   id: string;
+  font: string;
   // add other fields that your API returns
 }
 
@@ -50,24 +52,39 @@ const fetchMarkdown = async (id: string | null): Promise<MarkdownResponse> => {
 };
 
 interface AppProps {
-  id?: string | number;
+  id?: string;
+  isPreview?: boolean;
 }
 
-function App({ id }: AppProps) {
+export const FONT_OPTIONS = [
+  "Open Sans",
+  "Roboto",
+  "Lato",
+  "Montserrat",
+  "Source Code Pro",
+  "Fira Code",
+  "Arial",
+  "Times New Roman",
+];
+
+function App({ id, isPreview = false }: AppProps) {
   const [markdown, setMarkdown] = useState<string>(initialMarkdown);
   const [isMobilePreviewVisible, setIsMobilePreviewVisible] = useState(false);
+
+  const [selectedFont, setSelectedFont] = useState<string>("Open Sans");
   console.log("inside app and id...", id);
 
   // Use React Query to fetch markdown
   const { isLoading, error, data } = useQuery<MarkdownResponse, Error>({
     queryKey: ["markdown", id],
-    queryFn: () => fetchMarkdown(id),
+    queryFn: () => fetchMarkdown(id || null),
     enabled: !!id,
   });
 
   // Use useEffect to update markdown when data changes
   useEffect(() => {
     if (data) {
+      setSelectedFont(data?.font ?? "Open Sans");
       if (!data.content) {
         setMarkdown(initialMarkdown);
         return;
@@ -79,8 +96,40 @@ function App({ id }: AppProps) {
 
   console.log("data", data);
 
+  if (isPreview) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Helmet>
+          <link
+            href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Roboto&family=Lato&family=Montserrat&family=Source+Code+Pro&family=Fira+Code&display=swap"
+            rel="stylesheet"
+          />
+        </Helmet>
+        <main className="max-w-7xl mx-auto px-4 py-6">
+          {isLoading ? (
+            <div className="flex items-center justify-center">
+              <p>Loading markdown content...</p>
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center">
+              <p>Error loading content. Please try again later.</p>
+            </div>
+          ) : (
+            <Preview markdown={{ markdown, id, font: selectedFont }} />
+          )}
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <Helmet>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Roboto&family=Lato&family=Montserrat&family=Source+Code+Pro&family=Fira+Code&display=swap"
+          rel="stylesheet"
+        />
+      </Helmet>
       <Header
         isMobilePreviewVisible={isMobilePreviewVisible}
         setIsMobilePreviewVisible={setIsMobilePreviewVisible}
@@ -92,20 +141,19 @@ function App({ id }: AppProps) {
               <p>Loading markdown content...</p>
             </div>
           ) : error ? (
-            <div className="col-span-2 flex items-center justify-center text-red-500">
+            <div className="col-span-2 flex items-center justify-center ">
               <p>Error loading content. Please try again later.</p>
             </div>
           ) : (
             <>
               <Editor
-                markdown={{markdown, id}}
+                markdown={{ markdown, id: id ? parseInt(id) : undefined }}
                 setMarkdown={setMarkdown}
                 isMobilePreviewVisible={isMobilePreviewVisible}
-              />
-              <Preview
-                markdown={{ markdown, id }}
-                isMobilePreviewVisible={isMobilePreviewVisible}
-              />
+                selectedFont={selectedFont}
+                setSelectedFont={setSelectedFont}
+              /> 
+              <Preview markdown={{ markdown, id, font: selectedFont }} isPreview />
             </>
           )}
         </div>
@@ -113,5 +161,5 @@ function App({ id }: AppProps) {
     </div>
   );
 }
-
 export default App;
+

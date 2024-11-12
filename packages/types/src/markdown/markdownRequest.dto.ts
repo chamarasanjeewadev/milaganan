@@ -1,5 +1,6 @@
 export class CreateMarkdownRequestDto {
   title: string;
-  id:string|undefined;
+  id: string | undefined;
   content: string;
+  font: string;
 }
