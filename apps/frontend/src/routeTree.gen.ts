@@ -14,7 +14,6 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as PostIdImport } from './routes/$postId'
-import { Route as PreviewPostIdImport } from './routes/preview/$postId'
 
 // Create Virtual Routes
 
@@ -34,12 +33,6 @@ const IndexLazyRoute = IndexLazyImport.update({
   getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
 
-const PreviewPostIdRoute = PreviewPostIdImport.update({
-  id: '/preview/$postId',
-  path: '/preview/$postId',
-  getParentRoute: () => rootRoute,
-} as any)
-
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
@@ -58,13 +51,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PostIdImport
       parentRoute: typeof rootRoute
     }
-    '/preview/$postId': {
-      id: '/preview/$postId'
-      path: '/preview/$postId'
-      fullPath: '/preview/$postId'
-      preLoaderRoute: typeof PreviewPostIdImport
-      parentRoute: typeof rootRoute
-    }
   }
 }
 
@@ -73,41 +59,36 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexLazyRoute
   '/$postId': typeof PostIdRoute
-  '/preview/$postId': typeof PreviewPostIdRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexLazyRoute
   '/$postId': typeof PostIdRoute
-  '/preview/$postId': typeof PreviewPostIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexLazyRoute
   '/$postId': typeof PostIdRoute
-  '/preview/$postId': typeof PreviewPostIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$postId' | '/preview/$postId'
+  fullPaths: '/' | '/$postId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$postId' | '/preview/$postId'
-  id: '__root__' | '/' | '/$postId' | '/preview/$postId'
+  to: '/' | '/$postId'
+  id: '__root__' | '/' | '/$postId'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexLazyRoute: typeof IndexLazyRoute
   PostIdRoute: typeof PostIdRoute
-  PreviewPostIdRoute: typeof PreviewPostIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexLazyRoute: IndexLazyRoute,
   PostIdRoute: PostIdRoute,
-  PreviewPostIdRoute: PreviewPostIdRoute,
 }
 
 export const routeTree = rootRoute
@@ -121,8 +102,7 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/$postId",
-        "/preview/$postId"
+        "/$postId"
       ]
     },
     "/": {
@@ -130,9 +110,6 @@ export const routeTree = rootRoute
     },
     "/$postId": {
       "filePath": "$postId.tsx"
-    },
-    "/preview/$postId": {
-      "filePath": "preview/$postId.tsx"
     }
   }
 }

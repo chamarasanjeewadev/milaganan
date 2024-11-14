@@ -6,34 +6,34 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { Helmet } from "react-helmet";
 
-const initialMarkdown = `# Welcome to Markdown Editor
+const initialMarkdown = `# සාදරයෙන් පිළිගනිමු 
+## එළවළු මිල ලැයිස්තුව
 
-## Features
-- Live preview
-- GitHub Flavored Markdown support
-- HTML support
-- Responsive design
-- QR Code sharing
+## විශේෂාංග
+- 🥦 තත්කාලීන මිල ගණන්
+- 🌱 තත්ත්ව සහතික
+- 🍲 පාරිභෝගික සැලසුම්
+- 📱 ජංගම බෙදාගැනීම්
+- 📷 QR කේත බෙදාගැනීම
 
-### Try it out!
-1. Edit the markdown on the left
-2. See the preview on the right
-3. Click "Show QR" to view on mobile
+### අපගේ විවිධ එළවළු මිල ලැයිස්තුව බලන්න!
+1. වම් පැත්තේ විස්තර සංස්කරණය කරන්න
+2. එළවළු තත්වයන් සහ මිල ගණන් බලන්න
+3. QR කේතය පෙන්වන්න ඔබේ ජංගම දුරකථනයෙන් පරික්ෂා කරන්න
 
-#### Code Example
-\`\`\`javascript
-const greeting = "Hello, World!";
-console.log(greeting);
-\`\`\`
+#### මිල ලැයිස්තුව - එළවළු
+| එළවළු             | මිල (රු) | තත්වය |
+|--------------------|----------|--------|
+| 🍅 තක්කාලි          | 150.00   | ✅    |
+| 🥔 අල                | 120.00   | ✅    |
+| 🥕 කැරට්            | 80.00    | ✅    |
+| 🥒 පිපිඤ්ඤා          | 60.00    | ✅    |
+| 🍆 වම්බටු           | 90.00    | ✅    |
+| 🌶️ මිරිස්            | 200.00   | ✅    |
+| 🥬 කොස්             | 75.00    | ✅    |
+| 🌽 බඩ ඉරිඟු        | 50.00    | ✅    |
 
-#### Table Example
-| Feature | Status |
-|---------|--------|
-| Markdown | ✅ |
-| Preview | ✅ |
-| QR Code | ✅ |
-
-> Scan the QR code to view this content on your mobile device!
+> 📲 ජංගම උපකරණයේ මෙම මිල ලැයිස්තුව නැරඹීමට QR කේතය පාරික්‍ෂා කරන්න!
 `;
 
 interface MarkdownResponse {
@@ -57,6 +57,7 @@ interface AppProps {
 }
 
 export const FONT_OPTIONS = [
+  "Noto Sans Sinhala",
   "Open Sans",
   "Roboto",
   "Lato",
@@ -69,10 +70,8 @@ export const FONT_OPTIONS = [
 
 function App({ id, isPreview = false }: AppProps) {
   const [markdown, setMarkdown] = useState<string>(initialMarkdown);
-  const [isMobilePreviewVisible, setIsMobilePreviewVisible] = useState(false);
 
   const [selectedFont, setSelectedFont] = useState<string>("Open Sans");
-  console.log("inside app and id...", id);
 
   // Use React Query to fetch markdown
   const { isLoading, error, data } = useQuery<MarkdownResponse, Error>({
@@ -101,7 +100,11 @@ function App({ id, isPreview = false }: AppProps) {
       <div className="min-h-screen bg-gray-50">
         <Helmet>
           <link
-            href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Roboto&family=Lato&family=Montserrat&family=Source+Code+Pro&family=Fira+Code&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;500;700&display=swap"
+            rel="stylesheet"
+          />
+          <link
+            href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&family=Lato:wght@400;700&family=Montserrat:wght@400;500;700&family=Source+Code+Pro:wght@400;700&family=Fira+Code:wght@400;700&display=swap"
             rel="stylesheet"
           />
         </Helmet>
@@ -126,14 +129,15 @@ function App({ id, isPreview = false }: AppProps) {
     <div className="min-h-screen bg-gray-50">
       <Helmet>
         <link
-          href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Roboto&family=Lato&family=Montserrat&family=Source+Code+Pro&family=Fira+Code&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;500;700&display=swap"
+          rel="stylesheet"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&family=Lato:wght@400;700&family=Montserrat:wght@400;500;700&family=Source+Code+Pro:wght@400;700&family=Fira+Code:wght@400;700&display=swap"
           rel="stylesheet"
         />
       </Helmet>
-      <Header
-        isMobilePreviewVisible={isMobilePreviewVisible}
-        setIsMobilePreviewVisible={setIsMobilePreviewVisible}
-      />
+      <Header />
       <main className="max-w-7xl mx-auto px-4 py-6">
         <div className="grid md:grid-cols-2 gap-6 h-[calc(100vh-8rem)]">
           {isLoading ? (
@@ -149,11 +153,15 @@ function App({ id, isPreview = false }: AppProps) {
               <Editor
                 markdown={{ markdown, id: id ? parseInt(id) : undefined }}
                 setMarkdown={setMarkdown}
-                isMobilePreviewVisible={isMobilePreviewVisible}
+                isMobilePreviewVisible={false}
                 selectedFont={selectedFont}
                 setSelectedFont={setSelectedFont}
-              /> 
-              <Preview markdown={{ markdown, id, font: selectedFont }} isPreview />
+              />
+              <Preview
+                markdown={{ markdown, id, font: selectedFont }}
+                logoUrl={`${id}/logo.jpg`}
+                isPreview
+              />
             </>
           )}
         </div>
@@ -162,4 +170,3 @@ function App({ id, isPreview = false }: AppProps) {
   );
 }
 export default App;
-

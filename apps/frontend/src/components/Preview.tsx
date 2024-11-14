@@ -3,15 +3,16 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import { QRCodeSVG } from "qrcode.react";
-import { Eye, QrCode } from "lucide-react";
+import { QrCode } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { CreateMarkdownRequestDto } from "@repo/types";
 import { useNavigate } from "@tanstack/react-router";
+import { useTranslation } from 'react-i18next';
 
 interface PreviewProps {
   markdown: { markdown: string; id: string | undefined; font?: string };
-  isPreview: boolean;
+  isPreview?: boolean;
   logoUrl?: string;
 }
 
@@ -20,10 +21,9 @@ export function Preview({
   isPreview,
   logoUrl,
 }: PreviewProps) {
+  const { t } = useTranslation();
   const [showQR, setShowQR] = React.useState(false);
   const navigate = useNavigate();
-
-  console.group("selected fornt........................", font);
 
   const saveMarkdownMutation = useMutation({
     mutationFn: async () => {
@@ -31,7 +31,7 @@ export function Preview({
         title: "test",
         content: markdown,
         id,
-        font: font || 'default',
+        font: font || "default",
       };
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/markdown`,
@@ -56,37 +56,42 @@ export function Preview({
   // Convert markdown to HTML and create a Blob URL
   const getPreviewUrl = () => {
     const currentId = id;
-    return `${window.location.origin}/preview/${currentId}`;
+    return `${window.location.origin}/${currentId}?isPreview=true`;
   };
 
   return (
     <div className="block">
       <div className="h-full flex flex-col">
-        <div className="mb-2 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Eye className="h-4 w-4 text-gray-500" />
-            <h2 className="text-sm font-medium text-gray-700">Preview</h2>
-          </div>
+        <div className="mb-2 flex items-center justify-end">
           {isPreview && (
-            <div className="flex items-center space-x-2 ">
+            <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowQR(!showQR)}
                 className="flex items-center space-x-1 px-2 py-1 text-sm rounded-md bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
               >
                 <QrCode className="h-4 w-4" />
-                <span>{showQR ? "Hide QR" : "Show QR"}</span>
+                <span>{showQR ? t('hide_qr') : t('show_qr')}</span>
               </button>
               <button
                 onClick={handleSaveQR}
                 className="flex items-center space-x-1 px-2 py-1 text-sm rounded-md bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
               >
                 <QrCode className="h-4 w-4" />
-                <span>{"Save"}</span>
+                <span>{t('save')}</span>
               </button>
             </div>
           )}
         </div>
         <div className="flex-1 overflow-auto rounded-lg border border-gray-200 bg-white">
+          {logoUrl && (
+            <div className="p-4 border-b border-gray-200 bg-gray-50f flex justify-center">
+              <img 
+                src={logoUrl} 
+                alt="Logo" 
+                className="h-12 w-12 object-contain"
+              />
+            </div>
+          )}
           {showQR ? (
             <div className="flex flex-col items-center justify-center h-full p-8 space-y-4">
               <QRCodeSVG
@@ -94,15 +99,17 @@ export function Preview({
                 size={256}
                 level="H"
                 includeMargin
-                imageSettings={logoUrl ? {
-                  src: logoUrl,
-                  height: 48,
-                  width: 48,
-                  excavate: true,
-                } : undefined}
+                {...(logoUrl && {
+                  imageSettings: {
+                    src: logoUrl,
+                    height: 48,
+                    width: 48,
+                    excavate: true,
+                  }
+                })}
               />
               <p className="text-sm text-gray-600">
-                Scan to view the preview on your mobile device
+                {t('scan_preview')}
               </p>
             </div>
           ) : (
@@ -116,17 +123,6 @@ export function Preview({
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeRaw]}
-                // components={{
-                //   p: ({ node, ...props }) => (
-                //     <p
-                //       style={{
-                //         marginBottom: "0.5em",
-                //         fontFamily: font,
-                //       }}
-                //       {...props}
-                //     />
-                //   ),
-                // }}
               >
                 {markdown}
               </ReactMarkdown>

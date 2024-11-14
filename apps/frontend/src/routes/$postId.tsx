@@ -7,7 +7,10 @@ export const Route = createFileRoute("/$postId")({
 
 function PostComponent() {
   const { postId } = Route.useParams();
+  const { isPreview } = Route.useSearch();
+
   console.log("Route Params:", Route.useParams());
   console.log("PostID:", postId, typeof postId);
-  return <App id={postId} />;
+
+  return <App id={postId} isPreview={!!isPreview} />;
 }

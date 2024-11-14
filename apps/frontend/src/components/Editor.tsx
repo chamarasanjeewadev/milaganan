@@ -11,8 +11,19 @@ import {
   Heading1,
   Heading2,
   Table,
+  Upload,
 } from "lucide-react";
 import { FONT_OPTIONS } from "./App";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useTranslation } from "react-i18next";
 
 interface EditorProps {
   markdown: { markdown: string; id: number; font?: string };
@@ -20,7 +31,7 @@ interface EditorProps {
   isMobilePreviewVisible: boolean;
   selectedFont: string;
   setSelectedFont: (font: string) => void;
-  setLogoUrl: (url: string) => void;
+  setLogoUrl?: (url: string) => void;
 }
 
 interface ToolbarButton {
@@ -41,6 +52,7 @@ export function Editor({
   setSelectedFont,
   setLogoUrl,
 }: EditorProps) {
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   console.log("updated markdown", markdown);
@@ -75,19 +87,14 @@ export function Editor({
     {
       icon: Image,
       label: "Image",
-      action: async text => {
+      action: async () => {
         if (fileInputRef.current) {
           fileInputRef.current.click();
-          return {
-            text: markdown,
-            selectionStart: textareaRef.current?.selectionStart || 0,
-            selectionEnd: textareaRef.current?.selectionEnd || 0,
-          };
         }
         return {
-          text: `![${text}](url)`,
-          selectionStart: text ? text.length + 4 : 2,
-          selectionEnd: text ? text.length + 7 : 5,
+          text: "",
+          selectionStart: 0,
+          selectionEnd: 0,
         };
       },
     },
@@ -157,9 +164,9 @@ export function Editor({
 
     const result = await button.action(selectedText);
 
-    // const newText =
-    //   markdown.substring(0, start) + result.text + markdown.substring(end);
-    // setMarkdown(newText);
+    const newText =
+      markdown.substring(0, start) + result.text + markdown.substring(end);
+    setMarkdown(newText);
 
     // setTimeout(() => {
     //   textarea.focus();
@@ -173,7 +180,7 @@ export function Editor({
   const handleFileUpload = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("postId", id.toString());
+    formData.append("postId", id);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/upload`, {
@@ -218,25 +225,37 @@ export function Editor({
     }
   };
 
-  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    
+
+    if (file.type !== "image/jpeg") {
+      alert("Please upload only JPG files");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("file", file);
     formData.append("postId", id.toString());
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/upload/logo`, {
-        method: "POST",
-        body: formData,
-        headers: {
-          Accept: "application/json",
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/upload/logo`,
+        {
+          method: "POST",
+          body: formData,
+          headers: {
+            Accept: "application/json",
+          },
         },
-      });
+      );
 
       if (!response.ok) {
-        throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Upload failed: ${response.status} ${response.statusText}`,
+        );
       }
       const data = await response.json();
       setLogoUrl(data.url);
@@ -264,38 +283,52 @@ export function Editor({
         <div className="mb-2 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <FileEdit className="h-4 w-4 text-gray-500" />
-            <h2 className="text-sm font-medium text-gray-700">Editor</h2>
+            <h2 className="text-sm font-medium text-gray-700">{t("editor")}</h2>
           </div>
           <div className="flex items-center space-x-2">
-            <select
-              value={selectedFont}
-              onChange={e => setSelectedFont(e.target.value)}
-              className="text-sm border border-gray-200 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            >
-              {FONT_OPTIONS.map(font => (
-                <option key={font} value={font}>
-                  {font}
-                </option>
-              ))}
-            </select>
-            <input
+            <Select value={selectedFont} onValueChange={setSelectedFont}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder={t("select_font")} />
+              </SelectTrigger>
+              <SelectContent>
+                {FONT_OPTIONS.map(font => (
+                  <SelectItem key={font} value={font}>
+                    {font}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Input
               type="file"
-              accept="image/*"
+              accept="image/jpeg"
               onChange={handleLogoUpload}
-              className="text-sm border border-gray-200 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="hidden"
+              id="logo-upload"
             />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => document.getElementById("logo-upload")?.click()}
+              className="flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              {t("upload_logo")}
+            </Button>
           </div>
         </div>
         <div className="mb-2 flex flex-wrap gap-1 p-2 bg-white rounded-lg border border-gray-200">
           {toolbarButtons.map(button => (
-            <button
+            <Button
               key={button.label}
+              variant="ghost"
+              size="sm"
               onClick={() => handleToolbarAction(button)}
-              className="p-1.5 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+              className="p-1.5"
               title={button.label}
             >
               <button.icon className="h-4 w-4" />
-            </button>
+            </Button>
           ))}
         </div>
         <textarea
@@ -303,7 +336,7 @@ export function Editor({
           className="flex-1 w-full p-4 rounded-lg border border-gray-200 bg-white font-mono text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           value={markdown}
           onChange={e => setMarkdown(e.target.value)}
-          placeholder="Enter your markdown here..."
+          placeholder={t("enter_markdown")}
           style={{ fontFamily: selectedFont }}
         />
       </div>
