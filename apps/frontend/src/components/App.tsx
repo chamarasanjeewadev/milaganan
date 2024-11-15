@@ -5,6 +5,7 @@ import { Preview } from "./Preview";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { Helmet } from "react-helmet";
+import { ShareCard } from "./ShareCard";
 
 const initialMarkdown = `# සාදරයෙන් පිළිගනිමු 
 ## එළවළු මිල ලැයිස්තුව
@@ -53,7 +54,7 @@ const fetchMarkdown = async (id: string | null): Promise<MarkdownResponse> => {
 
 interface AppProps {
   id?: string;
-  isPreview?: boolean;
+  preview?: boolean;
 }
 
 export const FONT_OPTIONS = [
@@ -73,11 +74,24 @@ interface LogoState {
   timestamp: number;
 }
 
-function App({ id, isPreview = false }: AppProps) {
+interface LogoResponse {
+  url: string;
+  path: string;
+  timestamp: number;
+}
+
+const fetchLogo = async (id: string): Promise<LogoResponse> => {
+  const response = await axios.get<LogoResponse>(
+    `${import.meta.env.VITE_API_URL}/upload/logo/${id}`,
+  );
+  return response.data;
+};
+
+function App({ id, preview = false }: AppProps) {
   const [markdown, setMarkdown] = useState<string>(initialMarkdown);
   const [selectedFont, setSelectedFont] = useState<string>("Open Sans");
   const [logoUrl, setLogoUrl] = useState<LogoState>({
-    url: id ? `${id}/logo.jpg` : undefined,
+    url: undefined,
     timestamp: Date.now(),
   });
 
@@ -103,7 +117,22 @@ function App({ id, isPreview = false }: AppProps) {
 
   console.log("data", data);
 
-  if (isPreview) {
+  const { data: logoData } = useQuery<LogoResponse, Error>({
+    queryKey: ["logo", id],
+    queryFn: () => fetchLogo(id!),
+    enabled: !!id,
+  });
+
+  useEffect(() => {
+    if (logoData) {
+      setLogoUrl({
+        url: logoData.url,
+        timestamp: logoData.timestamp,
+      });
+    }
+  }, [logoData]);
+
+  if (preview) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Helmet>
@@ -126,11 +155,13 @@ function App({ id, isPreview = false }: AppProps) {
               <p>Error loading content. Please try again later.</p>
             </div>
           ) : (
-            <Preview
-              markdown={{ markdown, id, font: selectedFont }}
-              logoUrl={logoUrl.url}
-              isPreview
-            />
+            <>
+              <Preview
+                markdown={{ markdown, id, font: selectedFont }}
+                logoUrl={logoUrl}
+                preview={preview}
+              />
+            </>
           )}
         </main>
       </div>
@@ -173,8 +204,18 @@ function App({ id, isPreview = false }: AppProps) {
               <Preview
                 markdown={{ markdown, id, font: selectedFont }}
                 logoUrl={logoUrl}
-                isPreview
+                preview={preview}
               />
+              {id && (
+                <div className="col-span-2 mt-6">
+                  <ShareCard 
+                    url={window.location.href.includes(`/${id}`) 
+                      ? window.location.href 
+                      : `${window.location.href}${window.location.href.endsWith('/') ? '' : '/'}${id}`
+                    } 
+                  />
+                </div>
+              )}
             </>
           )}
         </div>

@@ -24,6 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTranslation } from "react-i18next";
+import { useToast } from "@/components/ui/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface EditorProps {
   markdown: { 
@@ -57,8 +59,10 @@ export function Editor({
   setLogoUrl,
 }: EditorProps) {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const queryClient = useQueryClient();
   console.log("updated markdown", markdown);
   const toolbarButtons: ToolbarButton[] = [
     {
@@ -239,7 +243,11 @@ export function Editor({
     if (!file || !id) return;
 
     if (file.type !== "image/jpeg") {
-      alert("Please upload only JPG files");
+      toast({
+        variant: "destructive",
+        title: t("error"),
+        description: t("jpg_only_error"),
+      });
       return;
     }
 
@@ -270,9 +278,21 @@ export function Editor({
         url: data.path,
         timestamp: Date.now()
       });
+
+      queryClient.invalidateQueries({ queryKey: ["logo", id] });
+
+      toast({
+        title: t("success"),
+        description: t("logo_upload_success"),
+      });
       
     } catch (error) {
       console.error("Error uploading logo:", error);
+      toast({
+        variant: "destructive",
+        title: t("error"),
+        description: t("logo_upload_error"),
+      });
     }
   };
 
@@ -289,7 +309,15 @@ export function Editor({
         <div className="mb-2 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <FileEdit className="h-4 w-4 text-gray-500" />
-            <h2 className="text-sm font-medium text-gray-700">{t("editor")}</h2>
+            <h2 className="text-sm font-medium text-gray-700"></h2>
+            <a
+              href="https://www.markdownguide.org/basic-syntax/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-indigo-600 hover:text-indigo-800 ml-2"
+            >
+              {t("learn_markdown")}
+            </a>
           </div>
           <div className="flex items-center space-x-2">
             <Select value={selectedFont} onValueChange={setSelectedFont}>

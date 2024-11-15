@@ -37,6 +37,27 @@ i18n
             numberedList: 'Numbered List',
             quote: 'Quote',
             table: 'Table'
+          },
+          saving: 'Saving...',
+          success: 'Success',
+          error: 'Error',
+          qr_code_saved: 'QR code saved successfully',
+          failed_to_save_qr: 'Failed to save QR code',
+          download_png: 'Download PNG',
+          download_pdf: 'Download PDF',
+          jpg_only_error: 'Only JPG images are allowed',
+          logo_upload_success: 'Logo uploaded successfully',
+          logo_upload_error: 'Failed to upload logo',
+          learn_markdown: 'Learn Markdown',
+          share: {
+            title: 'Share This Page',
+            copy_success: 'URL copied to clipboard!',
+            copy_error: 'Failed to copy URL',
+            email_section: 'Share via Email',
+            email_placeholder: 'Enter email address',
+            send: 'Send',
+            email_success: 'Email sent successfully!',
+            email_error: 'Failed to send email'
           }
         }
       },
@@ -62,6 +83,27 @@ i18n
             numberedList: 'අංක ලැයිස්තුව',
             quote: 'උපුටා දැක්වීම',
             table: 'වගුව'
+          },
+          saving: 'සුරකිමින්...',
+          success: 'සාර්ථකයි',
+          error: 'දෝෂයකි',
+          qr_code_saved: 'QR කේතය සාර්ථකව සුරකින ලදී',
+          failed_to_save_qr: 'QR කේතය සුරැකීමට අසමත් විය',
+          download_png: 'PNG බාගත කරන්න',
+          download_pdf: 'PDF බාගත කරන්න',
+          jpg_only_error: 'JPG රූප පමණක් අවසර ඇත',
+          logo_upload_success: 'ලාංඡනය සාර්ථකව උඩුගත කරන ලදී',
+          logo_upload_error: 'ලාංඡනය උඩුගත කිරීමට අසමත් විය',
+          learn_markdown: 'මාර්ක්ඩවුන් ලබා දීමට මාර්ක්ඩවුන් ලියාපදිංචි කරන්න',
+          share: {
+            title: 'මෙම පිටුව බෙදාගන්න',
+            copy_success: 'URL පසුරු පුවරුවට පිටපත් කරන ලදී!',
+            copy_error: 'URL පිටපත් කිරීමට අසමත් විය',
+            email_section: 'විද්‍යුත් තැපෑලෙන් බෙදාගන්න',
+            email_placeholder: 'විද්‍යුත් තැපැල් ලිපිනය ඇතුළත් කරන්න',
+            send: 'යවන්න',
+            email_success: 'විද්‍යුත් තැපෑල සාර්ථකව යවන ලදී!',
+            email_error: 'විද්‍යුත් තැපෑල යැවීමට අසමත් විය'
           }
         }
       }

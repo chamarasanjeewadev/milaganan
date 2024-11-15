@@ -1,0 +1,49 @@
+# Switch between these two lines to change environment
+@api =https://4atcam91w2.execute-api.us-east-1.amazonaws.com/prod
+# @api = http://localhost:3002
+
+### Get Markdown
+POST {{api}}/markdown
+Content-Type: application/json
+
+### Create Markdown
+POST {{api}}/markdown/4433
+Content-Type: application/json
+
+{
+    "content": "# Hello World\nThis is a markdown test"
+}
+
+### Create Markdown on Production
+POST {{api}}/markdown
+Content-Type: application/json
+
+{
+    "title": "test",
+    "content": "# Welcome to Markdown Editor\n\n## Features\n- Live preview\n- GitHub Flavored Markdown support\n- HTML support\n- Responsive design\n- QR Code sharing\n\n### Try it out!\n1. Edit the markdown on the left\n2. See the preview on the right\n3. Click \"Show QR\" to view on mobile\n\n#### Code Example\n```javascript\nconst greeting = \"Hello, World!\";\nconsole.log(greeting);\n```\n\n#### Table Example\n| Feature | Status |\n|---------|--------|\n| Markdown | ✅ |\n| Preview | ✅ |\n| QR Code | ✅ |\n\n> Scan the QR code to view this content on your mobile device!\n"
+}
+
+### Upload File
+POST {{api}}/upload
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="profile.jpg"
+Content-Type: image/jpeg
+
+< ./profile.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Upload File to Production
+POST {{api}}/upload
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="profile.jpg"
+Content-Type: image/jpeg
+
+< ./profile.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+
+

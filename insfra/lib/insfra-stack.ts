@@ -30,6 +30,7 @@ export class InsfraStack extends cdk.Stack {
       ],
       destinationBucket: websiteBucket,
       memoryLimit: 512,
+      prune: false
     });
 
     // Add this after the bucket deployment

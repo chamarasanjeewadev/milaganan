@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import { QRCodeSVG } from "qrcode.react";
-import { QrCode, Download } from "lucide-react";
+import { QrCode, Download, Loader2 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { CreateMarkdownRequestDto } from "@repo/types";
@@ -11,19 +11,26 @@ import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
+import { useToast } from "@/components/ui/use-toast";
+
+interface LogoState {
+  url: string | undefined;
+  timestamp: number;
+}
 
 interface PreviewProps {
-  markdown: { markdown: string; id: string | undefined; font?: string };
-  isPreview?: boolean;
-  logoUrl?: {
-    url: string | undefined;
-    timestamp: number;
+  markdown: {
+    markdown: string;
+    id?: string;
+    font: string;
   };
+  logoUrl: LogoState;
+  preview?: boolean;
 }
 
 export function Preview({
   markdown: { markdown, id, font },
-  isPreview,
+  preview,
   logoUrl,
 }: PreviewProps) {
   const { t } = useTranslation();
@@ -31,6 +38,7 @@ export function Preview({
   const [imageLoaded, setImageLoaded] = React.useState(false);
   const navigate = useNavigate();
   const qrCodeRef = React.useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
   console.log("rendering preview.... logo url", logoUrl);
   React.useEffect(() => {
     if (logoUrl) {
@@ -52,24 +60,37 @@ export function Preview({
       );
       return response.data;
     },
+    onSuccess: () => {
+      toast({
+        title: t("success"),
+        description: t("qr_code_saved"),
+      });
+    },
+    onError: error => {
+      toast({
+        variant: "destructive",
+        title: t("error"),
+        description: t("failed_to_save_qr"),
+      });
+      console.error("Failed to save markdown:", error);
+    },
   });
 
   const handleSaveQR = async () => {
     try {
-      console.log("Saving markdown...");
       const savedData = await saveMarkdownMutation.mutateAsync();
       if (savedData && savedData.id) {
         navigate({ to: `/${savedData.id}` });
       }
     } catch (error) {
-      console.error("Failed to save markdown:", error);
+      // Error handling is now done in mutation's onError
     }
   };
 
   // Convert markdown to HTML and create a Blob URL
   const getPreviewUrl = () => {
     const currentId = id;
-    return `${window.location.origin}/${currentId}?isPreview=true`;
+    return `${window.location.origin}/${currentId}?preview=true`;
   };
 
   const downloadQRCode = async (format: "png" | "pdf") => {
@@ -112,7 +133,7 @@ export function Preview({
     <div className="block">
       <div className="h-full flex flex-col">
         <div className="mb-2 flex items-center justify-end">
-          {isPreview && (
+          {!preview && (
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowQR(!showQR)}
@@ -123,17 +144,22 @@ export function Preview({
               </button>
               <button
                 onClick={handleSaveQR}
-                className="flex items-center space-x-1 px-2 py-1 text-sm rounded-md bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                disabled={saveMarkdownMutation.isPending}
+                className="flex items-center space-x-1 px-2 py-1 text-sm rounded-md bg-indigo-50 text-indigo-600 hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <QrCode className="h-4 w-4" />
-                <span>{t("save")}</span>
+                {saveMarkdownMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <QrCode className="h-4 w-4" />
+                )}
+                <span>
+                  {saveMarkdownMutation.isPending ? t("saving") : t("save")}
+                </span>
               </button>
             </div>
           )}
         </div>
-        <div
-          className={`flex-1 overflow-auto rounded-lg border border-gray-200 bg-white  ${!imageLoaded ? "hidden" : ""}`}
-        >
+        <div className="flex-1 overflow-auto rounded-lg border border-gray-200 bg-white">
           {logoUrl?.url && (
             <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-center">
               <img
