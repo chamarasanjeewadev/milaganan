@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef } from "react";
 import {
   FileEdit,
   Bold,
@@ -26,12 +26,16 @@ import {
 import { useTranslation } from "react-i18next";
 
 interface EditorProps {
-  markdown: { markdown: string; id: number; font?: string };
+  markdown: { 
+    markdown: string; 
+    id?: number | undefined; 
+    font?: string 
+  };
   setMarkdown: (value: string) => void;
   isMobilePreviewVisible: boolean;
   selectedFont: string;
   setSelectedFont: (font: string) => void;
-  setLogoUrl?: (url: string) => void;
+  setLogoUrl: (logo: { url: string | undefined; timestamp: number }) => void;
 }
 
 interface ToolbarButton {
@@ -45,7 +49,7 @@ interface ToolbarButton {
 }
 
 export function Editor({
-  markdown: { markdown, id, font },
+  markdown: { markdown, id },
   setMarkdown,
   isMobilePreviewVisible,
   selectedFont,
@@ -178,29 +182,34 @@ export function Editor({
   };
 
   const handleFileUpload = async (file: File) => {
+    if (!id) {
+        console.error("No post ID available");
+        return null;
+    }
+
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("postId", id);
+    formData.append("postId", id.toString());
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/upload`, {
-        method: "POST",
-        body: formData,
-        headers: {
-          Accept: "application/json",
-        },
-      });
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/upload`, {
+            method: "POST",
+            body: formData,
+            headers: {
+                Accept: "application/json",
+            },
+        });
 
-      if (!response.ok) {
-        throw new Error(
-          `Upload failed: ${response.status} ${response.statusText}`,
-        );
-      }
-      const data = await response.json();
-      return { url: data.url, path: data.path ?? `${id}/${file.name}` };
+        if (!response.ok) {
+            throw new Error(
+                `Upload failed: ${response.status} ${response.statusText}`,
+            );
+        }
+        const data = await response.json();
+        return { url: data.url, path: data.path ?? `${id}/${file.name}` };
     } catch (error) {
-      console.error("Error uploading file:", error);
-      return null;
+        console.error("Error uploading file:", error);
+        return null;
     }
   };
 
@@ -225,11 +234,9 @@ export function Editor({
     }
   };
 
-  const handleLogoUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || !id) return;
 
     if (file.type !== "image/jpeg") {
       alert("Please upload only JPG files");
@@ -257,18 +264,17 @@ export function Editor({
           `Upload failed: ${response.status} ${response.statusText}`,
         );
       }
-      const data = await response.json();
-      setLogoUrl(data.url);
+      const data = await response.json(); 
+      
+      setLogoUrl({
+        url: data.path,
+        timestamp: Date.now()
+      });
+      
     } catch (error) {
       console.error("Error uploading logo:", error);
     }
   };
-
-  useEffect(() => {
-    if (font) {
-      setSelectedFont(font);
-    }
-  }, [font, setSelectedFont]);
 
   return (
     <div className={`${isMobilePreviewVisible ? "hidden" : ""} md:block`}>

@@ -68,10 +68,18 @@ export const FONT_OPTIONS = [
   "Times New Roman",
 ];
 
+interface LogoState {
+  url: string | undefined;
+  timestamp: number;
+}
+
 function App({ id, isPreview = false }: AppProps) {
   const [markdown, setMarkdown] = useState<string>(initialMarkdown);
-
   const [selectedFont, setSelectedFont] = useState<string>("Open Sans");
+  const [logoUrl, setLogoUrl] = useState<LogoState>({
+    url: id ? `${id}/logo.jpg` : undefined,
+    timestamp: Date.now(),
+  });
 
   // Use React Query to fetch markdown
   const { isLoading, error, data } = useQuery<MarkdownResponse, Error>({
@@ -118,7 +126,11 @@ function App({ id, isPreview = false }: AppProps) {
               <p>Error loading content. Please try again later.</p>
             </div>
           ) : (
-            <Preview markdown={{ markdown, id, font: selectedFont }} />
+            <Preview
+              markdown={{ markdown, id, font: selectedFont }}
+              logoUrl={logoUrl.url}
+              isPreview
+            />
           )}
         </main>
       </div>
@@ -156,10 +168,11 @@ function App({ id, isPreview = false }: AppProps) {
                 isMobilePreviewVisible={false}
                 selectedFont={selectedFont}
                 setSelectedFont={setSelectedFont}
+                setLogoUrl={setLogoUrl}
               />
               <Preview
                 markdown={{ markdown, id, font: selectedFont }}
-                logoUrl={`${id}/logo.jpg`}
+                logoUrl={logoUrl}
                 isPreview
               />
             </>

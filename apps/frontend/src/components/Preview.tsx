@@ -3,17 +3,22 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import { QRCodeSVG } from "qrcode.react";
-import { QrCode } from "lucide-react";
+import { QrCode, Download } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { CreateMarkdownRequestDto } from "@repo/types";
 import { useNavigate } from "@tanstack/react-router";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 interface PreviewProps {
   markdown: { markdown: string; id: string | undefined; font?: string };
   isPreview?: boolean;
-  logoUrl?: string;
+  logoUrl?: {
+    url: string | undefined;
+    timestamp: number;
+  };
 }
 
 export function Preview({
@@ -23,7 +28,15 @@ export function Preview({
 }: PreviewProps) {
   const { t } = useTranslation();
   const [showQR, setShowQR] = React.useState(false);
+  const [imageLoaded, setImageLoaded] = React.useState(false);
   const navigate = useNavigate();
+  const qrCodeRef = React.useRef<HTMLDivElement>(null);
+  console.log("rendering preview.... logo url", logoUrl);
+  React.useEffect(() => {
+    if (logoUrl) {
+      setImageLoaded(false);
+    }
+  }, [logoUrl]);
 
   const saveMarkdownMutation = useMutation({
     mutationFn: async () => {
@@ -59,6 +72,42 @@ export function Preview({
     return `${window.location.origin}/${currentId}?isPreview=true`;
   };
 
+  const downloadQRCode = async (format: "png" | "pdf") => {
+    if (!qrCodeRef.current) return;
+
+    const canvas = await html2canvas(qrCodeRef.current);
+
+    if (format === "png") {
+      const link = document.createElement("a");
+      link.download = `qr-code.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } else {
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      // Calculate dimensions to center the QR code
+      const imgWidth = 100;
+      const imgHeight = 100;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const x = (pageWidth - imgWidth) / 2;
+      const y = (pageHeight - imgHeight) / 2;
+
+      pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight);
+      pdf.save("qr-code.pdf");
+    }
+  };
+
+  // Update the image handlers
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+  };
+
   return (
     <div className="block">
       <div className="h-full flex flex-col">
@@ -70,47 +119,67 @@ export function Preview({
                 className="flex items-center space-x-1 px-2 py-1 text-sm rounded-md bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
               >
                 <QrCode className="h-4 w-4" />
-                <span>{showQR ? t('hide_qr') : t('show_qr')}</span>
+                <span>{showQR ? t("hide_qr") : t("show_qr")}</span>
               </button>
               <button
                 onClick={handleSaveQR}
                 className="flex items-center space-x-1 px-2 py-1 text-sm rounded-md bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
               >
                 <QrCode className="h-4 w-4" />
-                <span>{t('save')}</span>
+                <span>{t("save")}</span>
               </button>
             </div>
           )}
         </div>
-        <div className="flex-1 overflow-auto rounded-lg border border-gray-200 bg-white">
-          {logoUrl && (
-            <div className="p-4 border-b border-gray-200 bg-gray-50f flex justify-center">
-              <img 
-                src={logoUrl} 
-                alt="Logo" 
-                className="h-12 w-12 object-contain"
+        <div
+          className={`flex-1 overflow-auto rounded-lg border border-gray-200 bg-white  ${!imageLoaded ? "hidden" : ""}`}
+        >
+          {logoUrl?.url && (
+            <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-center">
+              <img
+                src={logoUrl?.url}
+                alt="Logo"
+                className={`h-12 w-12 object-contain ${!imageLoaded ? "hidden" : ""}`}
+                onLoad={handleImageLoad}
+                key={`${logoUrl.url}?t=${logoUrl.timestamp}`}
               />
             </div>
           )}
           {showQR ? (
             <div className="flex flex-col items-center justify-center h-full p-8 space-y-4">
-              <QRCodeSVG
-                value={getPreviewUrl()}
-                size={256}
-                level="H"
-                includeMargin
-                {...(logoUrl && {
-                  imageSettings: {
-                    src: logoUrl,
-                    height: 48,
-                    width: 48,
-                    excavate: true,
-                  }
-                })}
-              />
-              <p className="text-sm text-gray-600">
-                {t('scan_preview')}
-              </p>
+              <div ref={qrCodeRef} className="bg-white p-4">
+                <QRCodeSVG
+                  value={getPreviewUrl()}
+                  size={256}
+                  level="H"
+                  includeMargin
+                  {...(logoUrl?.url && {
+                    imageSettings: {
+                      src: logoUrl.url,
+                      height: 48,
+                      width: 48,
+                      excavate: true,
+                    },
+                  })}
+                />
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => downloadQRCode("png")}
+                  className="flex items-center space-x-1 px-2 py-1 text-sm rounded-md bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>{t("download_png")}</span>
+                </button>
+                <button
+                  onClick={() => downloadQRCode("pdf")}
+                  className="flex items-center space-x-1 px-2 py-1 text-sm rounded-md bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>{t("download_pdf")}</span>
+                </button>
+              </div>
+              <p className="text-sm text-gray-600">{t("scan_preview")}</p>
             </div>
           ) : (
             <div
